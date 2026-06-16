@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="520" viewBox="0 0 860 520">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#020617" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <rect width="860" height="520" rx="22" fill="url(#bg)"/>
+  <rect x="0" y="0" width="860" height="56" rx="22" fill="#1f2937"/>
+  <circle cx="26" cy="28" r="7" fill="#fb7185"/>
+  <circle cx="50" cy="28" r="7" fill="#fbbf24"/>
+  <circle cx="74" cy="28" r="7" fill="#34d399"/>
+  <text x="100" y="34" font-family="Segoe UI, Arial, sans-serif" font-size="20" fill="#e5e7eb">parquet-info browse</text>
+  <g filter="url(#shadow)"><rect x="18" y="18" width="824" height="484" rx="18" fill="none" stroke="#334155"/></g>
+  <text x="28" y="84" font-family="Cascadia Mono, Consolas, monospace" font-size="18" fill="#d1d5db" xml:space="preserve">
+    <tspan x="28" dy="0">demo_inventory.parquet</tspan>
+    <tspan x="28" dy="24">rows 12/120  columns 6  row groups 1  sample: first 12 rows</tspan>
+    <tspan x="28" dy="24">    # | sku   | product_name   | warehouse | quantity | status       | notes</tspan>
+    <tspan x="28" dy="24">------+-------+----------------+-----------+----------+--------------+-----------------</tspan>
+    <tspan x="28" dy="24">    1 | A100  | Espresso Blend | WH-RM     | 7        | ready        |</tspan>
+    <tspan x="28" dy="24">    2 | A120  | Colombia Beans | WH-TO     | 14       | ready        |</tspan>
+    <tspan x="28" dy="24">    3 | B200  | Cold Brew Kit  | WH-MI     | 21       | backorder    |</tspan>
+    <tspan x="28" dy="24">    4 | C310  | Matcha Tin     | WH-RM     | 28       | ready        |</tspan>
+    <tspan x="28" dy="24">    5 | D420  | Ceramic Cups   | WH-TO     | 35       | quality_hold |</tspan>
+    <tspan x="28" dy="24">    6 | E510  | Gift Box       | WH-MI     | 42       | ready        |</tspan>
+    <tspan x="28" dy="24">    7 | A100  | Espresso Blend | WH-RM     | 49       | ready        |</tspan>
+    <tspan x="28" dy="24">    8 | A120  | Colombia Beans | WH-TO     | 56       | ready        |</tspan>
+    <tspan x="28" dy="24">    9 | B200  | Cold Brew Kit  | WH-MI     | 63       | backorder    |</tspan>
+    <tspan x="28" dy="24">   10 | C310  | Matcha Tin     | WH-RM     | 70       | ready        |</tspan>
+    <tspan x="28" dy="24">   11 | D420  | Ceramic Cups   | WH-TO     | 77       | quality_hold | priority reorder</tspan>
+    <tspan x="28" dy="24">row 4/12  column 5/6  status = ready</tspan>
+    <tspan x="28" dy="24">Arrows/WASD: move  PgUp/PgDn: rows  Home/End: columns  R: reset  Q/Esc: quit</tspan>
+  </text>
+</svg>
