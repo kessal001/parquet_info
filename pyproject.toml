@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "parquet-info"
+version = "0.1.0"
+description = "Fast terminal inspection for Parquet files."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "pyarrow>=14",
+  "rich>=13",
+]
+authors = [
+  { name = "Luca Pedersoli" },
+]
+keywords = [
+  "parquet",
+  "pyarrow",
+  "cli",
+  "terminal",
+  "data-engineering",
+  "analytics",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Information Technology",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Utilities",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.urls]
+Homepage = "https://github.com/kessal001/parquet_info"
+Repository = "https://github.com/kessal001/parquet_info"
+Issues = "https://github.com/kessal001/parquet_info/issues"
+
+[project.scripts]
+parquet-info = "parquet_info:main"
+
+[tool.setuptools]
+py-modules = ["parquet_info"]

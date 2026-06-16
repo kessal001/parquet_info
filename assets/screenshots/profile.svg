@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1044" height="1144" viewBox="0 0 1044 1144">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#020617" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <rect width="1044" height="1144" rx="22" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1044" height="56" rx="22" fill="#1f2937"/>
+  <circle cx="26" cy="28" r="7" fill="#fb7185"/>
+  <circle cx="50" cy="28" r="7" fill="#fbbf24"/>
+  <circle cx="74" cy="28" r="7" fill="#34d399"/>
+  <text x="100" y="34" font-family="Segoe UI, Arial, sans-serif" font-size="20" fill="#e5e7eb">parquet-info profile</text>
+  <g filter="url(#shadow)"><rect x="18" y="18" width="1008" height="1108" rx="18" fill="none" stroke="#334155"/></g>
+  <text x="28" y="84" font-family="Cascadia Mono, Consolas, monospace" font-size="18" fill="#d1d5db" xml:space="preserve">
+    <tspan x="28" dy="0">=== examples\demo_inventory.parquet ===</tspan>
+    <tspan x="28" dy="24">File size: 7.5 KB</tspan>
+    <tspan x="28" dy="24">Rows: 120</tspan>
+    <tspan x="28" dy="24">Columns: 16</tspan>
+    <tspan x="28" dy="24">Row groups: 1</tspan>
+    <tspan x="28" dy="24"> </tspan>
+    <tspan x="28" dy="24">Schema:</tspan>
+    <tspan x="28" dy="24">   1. row_id: int64 (nullable)</tspan>
+    <tspan x="28" dy="24">   2. sku: string (nullable)</tspan>
+    <tspan x="28" dy="24">   3. product_name: string (nullable)</tspan>
+    <tspan x="28" dy="24">   4. warehouse: string (nullable)</tspan>
+    <tspan x="28" dy="24">   5. city: string (nullable)</tspan>
+    <tspan x="28" dy="24">   6. country: string (nullable)</tspan>
+    <tspan x="28" dy="24">   7. customer: string (nullable)</tspan>
+    <tspan x="28" dy="24">   8. lot: string (nullable)</tspan>
+    <tspan x="28" dy="24">   9. quantity: int64 (nullable)</tspan>
+    <tspan x="28" dy="24">  10. reserved: int64 (nullable)</tspan>
+    <tspan x="28" dy="24">  11. net_quantity: int64 (nullable)</tspan>
+    <tspan x="28" dy="24">  12. unit_price: double (nullable)</tspan>
+    <tspan x="28" dy="24">  13. status: string (nullable)</tspan>
+    <tspan x="28" dy="24">  14. is_fragile: bool (nullable)</tspan>
+    <tspan x="28" dy="24">  15. updated_at: timestamp[us] (nullable)</tspan>
+    <tspan x="28" dy="24">  16. notes: string (nullable)</tspan>
+    <tspan x="28" dy="24"> </tspan>
+    <tspan x="28" dy="24">Column profile:</tspan>
+    <tspan x="28" dy="24"># | Column       | Type   | Nulls       | Distinct | Range / avg                     | Top values                              </tspan>
+    <tspan x="28" dy="24">--+--------------+--------+-------------+----------+---------------------------------+-----------------------------------------</tspan>
+    <tspan x="28" dy="24">1 | sku          | string | 0 (0%)      | 6        | A100 -&gt; E510                    | A100 (20); A120 (20); B200 (20)         </tspan>
+    <tspan x="28" dy="24">2 | product_name | string | 0 (0%)      | 6        | Ceramic Cups -&gt; Matcha Tin      | Ceramic Cups (20); Cold Brew Kit (20)...</tspan>
+    <tspan x="28" dy="24">3 | warehouse    | string | 0 (0%)      | 3        | WH-MI -&gt; WH-TO                  | WH-MI (40); WH-RM (40); WH-TO (40)      </tspan>
+    <tspan x="28" dy="24">4 | quantity     | int64  | 0 (0%)      | 86       | 0 -&gt; 89; avg 42.958333333333336 | 21 (3); 50 (3); 1 (2)                   </tspan>
+    <tspan x="28" dy="24">5 | status       | string | 0 (0%)      | 3        | backorder -&gt; ready              | ready (80); backorder (20); quality_h...</tspan>
+    <tspan x="28" dy="24">6 | notes        | string | 95 (79.17%) | 3        | damaged box -&gt; review supplier  | priority reorder (10); damaged box (9...</tspan>
+    <tspan x="28" dy="24">Profile computed on 120 rows.</tspan>
+    <tspan x="28" dy="24"> </tspan>
+    <tspan x="28" dy="24">First 5 rows (first 6 columns; use --max-sample-columns 0 for all):</tspan>
+    <tspan x="28" dy="24">sku  | product_name   | warehouse | quantity | status       | notes</tspan>
+    <tspan x="28" dy="24">-----+----------------+-----------+----------+--------------+------</tspan>
+    <tspan x="28" dy="24">A100 | Espresso Blend | WH-RM     | 7        | ready        |      </tspan>
+    <tspan x="28" dy="24">A120 | Colombia Beans | WH-TO     | 14       | ready        |      </tspan>
+    <tspan x="28" dy="24">B200 | Cold Brew Kit  | WH-MI     | 21       | backorder    |      </tspan>
+    <tspan x="28" dy="24">C310 | Matcha Tin     | WH-RM     | 28       | ready        |      </tspan>
+    <tspan x="28" dy="24">D420 | Ceramic Cups   | WH-TO     | 35       | quality_hold |</tspan>
+  </text>
+</svg>

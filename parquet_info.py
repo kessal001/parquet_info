@@ -24,6 +24,9 @@ Table = None
 RICH_AVAILABLE: bool | None = None
 
 
+__version__ = "0.1.0"
+
+
 ANSI_SEQUENCE = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
 
 
@@ -117,7 +120,7 @@ def format_percent(value: float) -> str:
 def format_number(value: int | None) -> str:
     if value is None:
         return "-"
-    return f"{value:,}".replace(",", ".")
+    return f"{value:,}"
 
 
 def json_safe(value: object) -> object:
@@ -432,7 +435,7 @@ def selected_output_format(args: argparse.Namespace) -> str:
             return "plain"
         return "rich" if load_rich() else "plain"
     if args.format == "rich" and not load_rich():
-        print("AVVISO: libreria rich non disponibile, uso output plain.", file=sys.stderr)
+        print("WARNING: rich is not installed, falling back to plain output.", file=sys.stderr)
         return "plain"
     return args.format
 
@@ -488,7 +491,7 @@ def profile_range_text(profile: ColumnProfile) -> str:
     if profile.min != "-" or profile.max != "-":
         parts.append(f"{profile.min} -> {profile.max}")
     if profile.mean != "-":
-        parts.append(f"media {profile.mean}")
+        parts.append(f"avg {profile.mean}")
     return "; ".join(parts) or "-"
 
 
@@ -496,7 +499,7 @@ def render_profile_plain(profiles: list[ColumnProfile], max_width: int, palette:
     if not profiles:
         return
 
-    headers = ["#", "Colonna", "Tipo", "Null", "Distinct", "Range / media", "Top valori"]
+    headers = ["#", "Column", "Type", "Nulls", "Distinct", "Range / avg", "Top values"]
     rows = []
     for index, profile in enumerate(profiles, start=1):
         rows.append(
@@ -512,7 +515,7 @@ def render_profile_plain(profiles: list[ColumnProfile], max_width: int, palette:
         )
 
     print()
-    print(palette.paint("Profilo colonne:", "1;35"))
+    print(palette.paint("Column profile:", "1;35"))
     print("\n".join(render_text_grid(headers, rows, max_width, palette)))
 
 
@@ -528,9 +531,9 @@ def render_plain_report(
 ) -> None:
     palette = Palette(args.color)
     print(palette.paint(f"=== {path} ===", "1;36"))
-    print(f"{palette.paint('Dimensione file:', '1;33')} {format_bytes(path.stat().st_size)}")
-    print(f"{palette.paint('Righe:', '1;33')} {metadata.num_rows:,}".replace(",", "."))
-    print(f"{palette.paint('Colonne:', '1;33')} {metadata.num_columns}")
+    print(f"{palette.paint('File size:', '1;33')} {format_bytes(path.stat().st_size)}")
+    print(f"{palette.paint('Rows:', '1;33')} {format_number(metadata.num_rows)}")
+    print(f"{palette.paint('Columns:', '1;33')} {metadata.num_columns}")
     print(f"{palette.paint('Row groups:', '1;33')} {metadata.num_row_groups}")
     print()
     print(palette.paint("Schema:", "1;35"))
@@ -539,8 +542,8 @@ def render_plain_report(
     render_profile_plain(profiles, args.max_width, palette)
     if profiles:
         profile_rows = metadata.num_rows if args.profile_rows == 0 else min(metadata.num_rows, args.profile_rows)
-        suffix = "" if profile_rows == metadata.num_rows else f" su {format_number(metadata.num_rows)}"
-        print(f"Profilo calcolato su {format_number(profile_rows)} righe{suffix}.")
+        suffix = "" if profile_rows == metadata.num_rows else f" out of {format_number(metadata.num_rows)}"
+        print(f"Profile computed on {format_number(profile_rows)} rows{suffix}.")
 
     if args.schema_only:
         print()
@@ -548,10 +551,10 @@ def render_plain_report(
 
     print()
     if search_scanned_rows is not None:
-        print(f"Righe scansionate per ricerca: {format_number(search_scanned_rows)}")
+        print(f"Rows scanned for search: {format_number(search_scanned_rows)}")
 
     if sample is None or sample.num_rows == 0:
-        print("Righe: nessuna riga disponibile.")
+        print("Rows: no rows available.")
         print()
         return
 
@@ -563,12 +566,12 @@ def render_plain_report(
 def render_rich_schema(console: "Console", schema: pa.Schema) -> None:
     table = Table(title="Schema", box=box.SIMPLE_HEAVY, row_styles=["", "dim"])
     table.add_column("#", justify="right", style="cyan", no_wrap=True)
-    table.add_column("Colonna", style="bold")
-    table.add_column("Tipo", overflow="fold")
-    table.add_column("Null", no_wrap=True)
+    table.add_column("Column", style="bold")
+    table.add_column("Type", overflow="fold")
+    table.add_column("Nullable", no_wrap=True)
 
     for index, field in enumerate(schema, start=1):
-        table.add_row(str(index), field.name, str(field.type), "si" if field.nullable else "no")
+        table.add_row(str(index), field.name, str(field.type), "yes" if field.nullable else "no")
     console.print(table)
 
 
@@ -576,19 +579,19 @@ def render_rich_profile(console: "Console", profiles: list[ColumnProfile], max_w
     if not profiles:
         return
 
-    table = Table(title="Profilo colonne", box=box.SIMPLE_HEAVY, row_styles=["", "dim"])
+    table = Table(title="Column profile", box=box.SIMPLE_HEAVY, row_styles=["", "dim"])
     table.add_column("#", justify="right", style="cyan", no_wrap=True)
-    table.add_column("Colonna", style="bold", max_width=min(max_width, 24), overflow="ellipsis", no_wrap=True)
-    table.add_column("Dettagli", ratio=1, overflow="fold")
+    table.add_column("Column", style="bold", max_width=min(max_width, 24), overflow="ellipsis", no_wrap=True)
+    table.add_column("Details", ratio=1, overflow="fold")
 
     for index, profile in enumerate(profiles, start=1):
         details = "\n".join(
             [
-                f"Tipo: {profile.type}",
-                f"Null: {format_number(profile.nulls)} ({format_percent(profile.null_percent)})"
+                f"Type: {profile.type}",
+                f"Nulls: {format_number(profile.nulls)} ({format_percent(profile.null_percent)})"
                 f" | Distinct: {format_number(profile.distinct)}",
-                f"Range/media: {profile_range_text(profile)}",
-                f"Top: {profile.top_values}",
+                f"Range/avg: {profile_range_text(profile)}",
+                f"Top values: {profile.top_values}",
             ]
         )
         table.add_row(
@@ -601,7 +604,7 @@ def render_rich_profile(console: "Console", profiles: list[ColumnProfile], max_w
 
 def render_rich_sample(console: "Console", sample: pa.Table | None, title: str | None, max_width: int) -> None:
     if sample is None or sample.num_rows == 0:
-        console.print("[yellow]Righe: nessuna riga disponibile.[/yellow]")
+        console.print("[yellow]Rows: no rows available.[/yellow]")
         return
 
     table = Table(title=title, box=box.SIMPLE_HEAVY, row_styles=["", "dim"])
@@ -628,18 +631,18 @@ def render_rich_report(
     summary.add_column(style="bold cyan", no_wrap=True)
     summary.add_column(no_wrap=True)
     summary.add_row("File", str(path))
-    summary.add_row("Dimensione", format_bytes(path.stat().st_size))
-    summary.add_row("Righe", format_number(metadata.num_rows))
-    summary.add_row("Colonne", format_number(metadata.num_columns))
+    summary.add_row("Size", format_bytes(path.stat().st_size))
+    summary.add_row("Rows", format_number(metadata.num_rows))
+    summary.add_row("Columns", format_number(metadata.num_columns))
     summary.add_row("Row groups", format_number(metadata.num_row_groups))
     if metadata.created_by:
         summary.add_row("Created by", metadata.created_by)
     if profiles:
         profile_rows = metadata.num_rows if args.profile_rows == 0 else min(metadata.num_rows, args.profile_rows)
         suffix = "" if profile_rows == metadata.num_rows else f" / {format_number(metadata.num_rows)}"
-        summary.add_row("Profilo righe", f"{format_number(profile_rows)}{suffix}")
+        summary.add_row("Profile rows", f"{format_number(profile_rows)}{suffix}")
     if search_scanned_rows is not None:
-        summary.add_row("Ricerca righe lette", format_number(search_scanned_rows))
+        summary.add_row("Search rows scanned", format_number(search_scanned_rows))
 
     console.print(Panel(summary, title=path.name, border_style="cyan"))
     render_rich_schema(console, schema)
@@ -757,7 +760,7 @@ class TableBrowser:
 
     def run(self) -> None:
         if not sys.stdin.isatty() or not sys.stdout.isatty():
-            print("ERRORE: --browse richiede un terminale interattivo.", file=sys.stderr)
+            print("ERROR: --browse requires an interactive terminal.", file=sys.stderr)
             return
 
         sys.stdout.write("\033[?1049h\033[?25l")
@@ -803,8 +806,8 @@ class TableBrowser:
         if width < 50 or height < 10:
             output = [
                 "\033[H\033[J",
-                "Terminale troppo piccolo per il browser.",
-                "Allarga la finestra oppure usa l'output classico senza --browse.",
+                "Terminal is too small for browse mode.",
+                "Resize the window or use the standard output without --browse.",
             ]
             sys.stdout.write("\n".join(output))
             sys.stdout.flush()
@@ -816,16 +819,16 @@ class TableBrowser:
 
         loaded_rows = len(self.rows)
         total_rows = self.metadata.num_rows
-        loaded_text = f"{loaded_rows:,}".replace(",", ".")
-        total_text = f"{total_rows:,}".replace(",", ".")
+        loaded_text = format_number(loaded_rows)
+        total_text = format_number(total_rows)
         limit_note = ""
         if self.loaded_rows_limit > 0 and loaded_rows < total_rows:
-            limit_note = f"  campione: prime {loaded_text} righe"
+            limit_note = f"  sample: first {loaded_text} rows"
 
         title = self.palette.paint(f"{self.path.name}", "1;36")
         stats = (
-            f"righe {loaded_text}/{total_text}  "
-            f"colonne {len(self.names)}  "
+            f"rows {loaded_text}/{total_text}  "
+            f"columns {len(self.names)}  "
             f"row groups {self.metadata.num_row_groups}"
             f"{limit_note}"
         )
@@ -843,7 +846,7 @@ class TableBrowser:
             lines.append(self._render_row(row_index, visible_columns, width))
 
         lines.append(self._fit_line(self._detail_line(), width))
-        help_text = "Frecce/WASD: muovi  PagSu/PagGiu: righe  Home/End: colonne  R: inizio  Q/Esc: esci"
+        help_text = "Arrows/WASD: move  PgUp/PgDn: rows  Home/End: columns  R: reset  Q/Esc: quit"
         lines.append(self._fit_line(self.palette.paint(help_text, "90"), width))
         lines.append("\033[J")
         sys.stdout.write("\n".join(lines))
@@ -927,13 +930,13 @@ class TableBrowser:
 
     def _detail_line(self) -> str:
         if not self.rows or not self.names:
-            return self.palette.paint("Nessuna riga disponibile.", "33")
+            return self.palette.paint("No rows available.", "33")
 
         name = self.names[self.selected_col]
         value = self.rows[self.selected_row][self.selected_col]
         position = (
-            f"riga {self.selected_row + 1}/{len(self.rows)}  "
-            f"colonna {self.selected_col + 1}/{len(self.names)}  "
+            f"row {self.selected_row + 1}/{len(self.rows)}  "
+            f"column {self.selected_col + 1}/{len(self.names)}  "
         )
         return self.palette.paint(position, "1;36") + f"{name} = {value}"
 
@@ -971,16 +974,16 @@ class TableBrowser:
 
 def inspect_file(path: Path, args: argparse.Namespace) -> tuple[int, dict[str, object] | None]:
     if not path.exists():
-        print(f"ERRORE: file non trovato: {path}", file=sys.stderr)
+        print(f"ERROR: file not found: {path}", file=sys.stderr)
         return 1, None
     if not path.is_file():
-        print(f"ERRORE: non e' un file: {path}", file=sys.stderr)
+        print(f"ERROR: not a file: {path}", file=sys.stderr)
         return 1, None
 
     try:
         parquet_file = pq.ParquetFile(path)
     except Exception as exc:  # noqa: BLE001 - show concise CLI error.
-        print(f"ERRORE: impossibile leggere {path}: {exc}", file=sys.stderr)
+        print(f"ERROR: unable to read {path}: {exc}", file=sys.stderr)
         return 1, None
 
     metadata = parquet_file.metadata
@@ -994,7 +997,7 @@ def inspect_file(path: Path, args: argparse.Namespace) -> tuple[int, dict[str, o
     if not args.schema_only:
         sample_columns, missing = parse_columns(args.columns, schema)
         if missing:
-            print(f"ERRORE: colonne non trovate: {', '.join(missing)}", file=sys.stderr)
+            print(f"ERROR: columns not found: {', '.join(missing)}", file=sys.stderr)
             return 1, None
 
         display_columns = sample_columns
@@ -1023,17 +1026,17 @@ def inspect_file(path: Path, args: argparse.Namespace) -> tuple[int, dict[str, o
             )
             if sample is not None and display_columns != sample_columns:
                 sample = sample.select(display_columns)
-            sample_title = f"Prime {0 if sample is None else sample.num_rows} righe che contengono {args.search!r}"
+            sample_title = f"First {0 if sample is None else sample.num_rows} matching rows for {args.search!r}"
             if len(display_columns) < len(sample_columns):
-                sample_title += f" (prime {len(display_columns)} colonne visualizzate)"
+                sample_title += f" (showing first {len(display_columns)} columns)"
         else:
             sample = read_sample(parquet_file, args.rows, display_columns)
             if sample is None:
-                sample_title = "Prime righe"
+                sample_title = "First rows"
             else:
-                sample_title = f"Prime {sample.num_rows} righe"
+                sample_title = f"First {sample.num_rows} rows"
             if len(display_columns) < len(schema.names):
-                sample_title += f" (prime {len(display_columns)} colonne; usa --max-sample-columns 0 per tutte)"
+                sample_title += f" (first {len(display_columns)} columns; use --max-sample-columns 0 for all)"
 
     report = build_json_report(path, metadata, schema, sample, profiles, search_scanned_rows)
     if output_format == "json":
@@ -1047,61 +1050,63 @@ def inspect_file(path: Path, args: argparse.Namespace) -> tuple[int, dict[str, o
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Mostra schema, profilo colonne e prime righe di uno o piu' file Parquet.",
+        description="Inspect schema, profiles, search hits, and sample rows from one or more Parquet files.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("files", nargs="+", help="File o pattern, ad esempio BaseDWH.parquet oppure *.parquet")
-    parser.add_argument("-n", "--rows", type=int, default=5, help="Numero di righe di esempio da mostrare (default: 5)")
-    parser.add_argument("--columns", help="Colonne da mostrare nell'anteprima, separate da virgola")
+    parser.add_argument("files", nargs="+", help="File paths or glob patterns, for example demo.parquet or *.parquet")
+    parser.add_argument("-n", "--rows", type=int, default=5, help="Number of sample rows to display")
+    parser.add_argument("--columns", help="Comma-separated columns to preview, profile, or search")
     parser.add_argument(
         "--max-sample-columns",
         type=int,
         default=25,
-        help="Numero massimo di colonne nell'anteprima. Usa 0 per mostrarle tutte (default: 25)",
+        help="Maximum number of columns to show in the sample preview. Use 0 for all columns",
     )
-    parser.add_argument("--max-width", type=int, default=40, help="Larghezza massima per valore mostrato (default: 40)")
+    parser.add_argument("--max-width", type=int, default=40, help="Maximum width for displayed values")
     parser.add_argument(
         "--format",
         choices=("auto", "rich", "plain", "json"),
         default="auto",
-        help="Formato output: auto usa rich se disponibile, altrimenti plain (default: auto)",
+        help="Output format. auto uses rich when available, otherwise plain",
     )
-    parser.add_argument("--pretty-json", action="store_true", help="Indenta l'output JSON")
-    parser.add_argument("--schema-only", action="store_true", help="Mostra solo metadata e schema")
-    parser.add_argument("--profile", action="store_true", help="Calcola qualita' e statistiche per colonna")
+    parser.add_argument("--pretty-json", action="store_true", help="Indent JSON output")
+    parser.add_argument("--schema-only", action="store_true", help="Show only metadata and schema")
+    parser.add_argument("--profile", action="store_true", help="Compute column quality and statistics")
     parser.add_argument(
         "--profile-rows",
         type=int,
         default=0,
-        help="Righe da usare per il profilo. Usa 0 per tutte (default: 0)",
+        help="Rows to use for profiling. Use 0 for all rows",
     )
     parser.add_argument(
         "--top-values",
         type=int,
         default=3,
-        help="Numero di valori piu' frequenti da mostrare nel profilo (default: 3)",
+        help="Number of top frequent values to show in profiles",
     )
-    parser.add_argument("--search", help="Testo da cercare nelle colonne selezionate")
+    parser.add_argument("--search", help="Text to search for in the selected columns")
     parser.add_argument(
         "--search-limit",
         type=int,
         default=20,
-        help="Numero massimo di righe trovate da mostrare (default: 20)",
+        help="Maximum number of matching rows to show",
     )
     parser.add_argument(
         "--search-rows",
         type=int,
         default=0,
-        help="Numero massimo di righe da scansionare per la ricerca. Usa 0 per tutte (default: 0)",
+        help="Maximum number of rows to scan during search. Use 0 for all rows",
     )
-    parser.add_argument("--case-sensitive", action="store_true", help="Ricerca distinguendo maiuscole/minuscole")
-    parser.add_argument("-b", "--browse", action="store_true", help="Apre una vista interattiva a colori navigabile")
+    parser.add_argument("--case-sensitive", action="store_true", help="Make search case-sensitive")
+    parser.add_argument("-b", "--browse", action="store_true", help="Open an interactive, navigable terminal table")
     parser.add_argument(
         "--browse-rows",
         type=int,
         default=1000,
-        help="Numero massimo di righe da caricare nel browser. Usa 0 per tutte (default: 1000)",
+        help="Maximum number of rows to load into browse mode. Use 0 for all rows",
     )
-    parser.add_argument("--no-color", action="store_true", help="Disabilita i colori ANSI")
+    parser.add_argument("--no-color", action="store_true", help="Disable ANSI colors")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     return parser
 
 
@@ -1110,39 +1115,39 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.rows < 0:
-        parser.error("--rows deve essere >= 0")
+        parser.error("--rows must be >= 0")
     if args.max_sample_columns < 0:
-        parser.error("--max-sample-columns deve essere >= 0")
+        parser.error("--max-sample-columns must be >= 0")
     if args.max_width < 5:
-        parser.error("--max-width deve essere >= 5")
+        parser.error("--max-width must be >= 5")
     if args.profile_rows < 0:
-        parser.error("--profile-rows deve essere >= 0")
+        parser.error("--profile-rows must be >= 0")
     if args.top_values < 0:
-        parser.error("--top-values deve essere >= 0")
+        parser.error("--top-values must be >= 0")
     if args.search_limit <= 0:
-        parser.error("--search-limit deve essere > 0")
+        parser.error("--search-limit must be > 0")
     if args.search_rows < 0:
-        parser.error("--search-rows deve essere >= 0")
+        parser.error("--search-rows must be >= 0")
     if args.browse_rows < 0:
-        parser.error("--browse-rows deve essere >= 0")
+        parser.error("--browse-rows must be >= 0")
     if args.browse and args.schema_only:
-        parser.error("--browse non puo' essere usato insieme a --schema-only")
+        parser.error("--browse cannot be used together with --schema-only")
     if args.schema_only and args.profile:
-        parser.error("--profile non puo' essere usato insieme a --schema-only")
+        parser.error("--profile cannot be used together with --schema-only")
     if args.schema_only and args.search:
-        parser.error("--search non puo' essere usato insieme a --schema-only")
+        parser.error("--search cannot be used together with --schema-only")
     if args.browse and args.profile:
-        parser.error("--profile non puo' essere usato insieme a --browse")
+        parser.error("--profile cannot be used together with --browse")
     if args.browse and args.search:
-        parser.error("--search non puo' essere usato insieme a --browse")
+        parser.error("--search cannot be used together with --browse")
     if args.browse and args.format == "json":
-        parser.error("--format json non puo' essere usato insieme a --browse")
+        parser.error("--format json cannot be used together with --browse")
 
     args.color = enable_ansi(args.no_color)
 
     paths = expand_paths(args.files)
     if not paths:
-        print("Nessun file trovato.", file=sys.stderr)
+        print("No files matched the requested inputs.", file=sys.stderr)
         return 1
 
     exit_code = 0
