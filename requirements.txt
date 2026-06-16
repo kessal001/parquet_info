@@ -1,0 +1,2 @@
+pyarrow>=14
+rich>=13
