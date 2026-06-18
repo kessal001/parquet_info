@@ -1,6 +1,8 @@
-# parquet_info
+# parquet-info
 
 ![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
+![CI](https://github.com/kessal001/parquet_info/actions/workflows/ci.yml/badge.svg)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Parquet](https://img.shields.io/badge/Apache%20Parquet-inspector-50ABF1)
 ![CLI](https://img.shields.io/badge/terminal-first-222222)
 
@@ -8,7 +10,11 @@ Inspect Parquet files from the terminal in seconds.
 
 `parquet_info` helps you answer the first questions you always have when a `.parquet` file lands on your machine: what is inside, how big it is, which columns matter, whether a value exists, and whether the data quality looks suspicious.
 
-It is built for fast inspection without opening Power BI, pandas, Spark, or a notebook.
+It is built for fast inspection without opening Power BI, pandas, Spark, or a notebook:
+
+```powershell
+parquet-info examples\demo_inventory.parquet --profile --search priority --format plain
+```
 
 ## Why it is useful
 
@@ -38,6 +44,12 @@ It is built for fast inspection without opening Power BI, pandas, Spark, or a no
 <img src="assets/screenshots/browse.svg" alt="Interactive browser screenshot" width="900">
 
 ## Install
+
+### Install from GitHub
+
+```powershell
+python -m pip install "git+https://github.com/kessal001/parquet_info.git"
+```
 
 ### Local project install
 
@@ -69,6 +81,14 @@ parquet-info examples\demo_inventory.parquet
 
 ```powershell
 .\parquet_info.cmd examples\demo_inventory.parquet
+```
+
+### PyPI releases
+
+The repo includes a Trusted Publishing release workflow. After the first PyPI release:
+
+```powershell
+python -m pip install parquet-info
 ```
 
 ## Quickstart
@@ -192,6 +212,18 @@ parquet-info huge_export.parquet --browse --browse-rows 5000 --columns customer,
 | `assets/screenshots/*.svg` | README screenshots generated from CLI output |
 | `scripts/generate_demo_parquet.py` | Regenerates the demo dataset |
 | `scripts/generate_readme_assets.py` | Regenerates the screenshot SVGs, including browse mode |
+| `tests/` | Automated CLI regression tests |
+| `.github/workflows/ci.yml` | Python test matrix for pull requests |
+| `.github/workflows/release.yml` | PyPI Trusted Publishing release workflow |
+
+## Project health
+
+- License: MIT, see [LICENSE](LICENSE).
+- Contributions: see [CONTRIBUTING.md](CONTRIBUTING.md).
+- Security reports: see [SECURITY.md](SECURITY.md).
+- Release process: see [docs/RELEASE.md](docs/RELEASE.md).
+- GitHub topics and repository settings: see [docs/GITHUB_SETUP.md](docs/GITHUB_SETUP.md).
+- Roadmap: see [ROADMAP.md](ROADMAP.md).
 
 ## Contributing
 

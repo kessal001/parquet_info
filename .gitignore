@@ -1,7 +1,16 @@
-.venv\
-__pycache__\
+.venv/
+__pycache__/
 *.py[cod]
-*.egg-info\
-build\
-dist\
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.tmp/
+.tmp-tests/
+.tmp-wheel/
+.coverage
+htmlcov/
+*.log
+BaseDWH.parquet
 

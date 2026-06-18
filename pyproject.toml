@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "Fast terminal inspection for Parquet files."
 readme = "README.md"
 requires-python = ">=3.10"
+license = { text = "MIT" }
 dependencies = [
   "pyarrow>=14",
   "rich>=13",
@@ -34,17 +35,30 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "License :: OSI Approved :: MIT License",
   "Topic :: Utilities",
   "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.optional-dependencies]
+dev = [
+  "build>=1.2",
+  "pytest>=8",
+  "twine>=5",
 ]
 
 [project.urls]
 Homepage = "https://github.com/kessal001/parquet_info"
 Repository = "https://github.com/kessal001/parquet_info"
 Issues = "https://github.com/kessal001/parquet_info/issues"
+Changelog = "https://github.com/kessal001/parquet_info/blob/main/CHANGELOG.md"
 
 [project.scripts]
 parquet-info = "parquet_info:main"
 
 [tool.setuptools]
 py-modules = ["parquet_info"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -p no:cacheprovider"

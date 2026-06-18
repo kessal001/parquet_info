@@ -1,0 +1,38 @@
+name: Bug report
+description: Report incorrect output, crashes, or terminal rendering problems.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Describe the behavior and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce
+      description: Include the command you ran and a minimal parquet file or generation script when possible.
+      value: |
+        ```shell
+        parquet-info ...
+        ```
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: parquet-info version
+      placeholder: parquet-info 0.1.0
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      placeholder: Python 3.12.4
+  - type: input
+    id: os
+    attributes:
+      label: Operating system and terminal
+      placeholder: Windows Terminal, PowerShell, macOS Terminal, Linux tty
