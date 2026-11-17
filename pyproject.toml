@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "parquet-info"
-version = "0.1.0"
-description = "Fast terminal inspection for Parquet files."
+version = "0.2.0"
+description = "Browse Parquet instantly in your terminal. Portable Windows command, schema, profiles and search."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
@@ -46,6 +46,10 @@ dev = [
   "pytest>=8",
   "twine>=5",
 ]
+windows = [
+  "pyinstaller==6.22.3; sys_platform == 'win32'",
+  "pillow>=10",
+]
 
 [project.urls]
 Homepage = "https://github.com/kessal001/parquet_info"
@@ -55,9 +59,10 @@ Changelog = "https://github.com/kessal001/parquet_info/blob/main/CHANGELOG.md"
 
 [project.scripts]
 parquet-info = "parquet_info:main"
+parquet = "parquet_windows:main"
 
 [tool.setuptools]
-py-modules = ["parquet_info"]
+py-modules = ["parquet_info", "parquet_windows"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

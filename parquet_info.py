@@ -24,7 +24,7 @@ Table = None
 RICH_AVAILABLE: bool | None = None
 
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 
 ANSI_SEQUENCE = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
@@ -55,8 +55,8 @@ class Palette:
         return f"\033[{code}m{text}\033[0m"
 
 
-def enable_ansi(no_color: bool = False) -> bool:
-    if no_color or os.environ.get("NO_COLOR") or not sys.stdout.isatty():
+def enable_ansi(no_color: bool = False, force_color: bool = False) -> bool:
+    if no_color or (not force_color and (os.environ.get("NO_COLOR") or not sys.stdout.isatty())):
         return False
 
     if os.name == "nt":
@@ -94,7 +94,8 @@ def stringify_value(value: object) -> str:
     else:
         text = str(value)
 
-    return text.replace("\r", "\\r").replace("\n", "\\n").replace("\t", " ")
+    text = text.replace("\r", "\\r").replace("\n", "\\n").replace("\t", " ")
+    return "".join(f"\\x{ord(char):02x}" if ord(char) < 32 or 127 <= ord(char) < 160 else char for char in text)
 
 
 def clip_text(text: str, max_width: int) -> str:
@@ -626,7 +627,7 @@ def render_rich_report(
     args: argparse.Namespace,
     search_scanned_rows: int | None,
 ) -> None:
-    console = Console(no_color=args.no_color, highlight=False)
+    console = Console(no_color=args.no_color, highlight=False, force_terminal=True if args.force_color else None)
     summary = Table.grid(padding=(0, 2))
     summary.add_column(style="bold cyan", no_wrap=True)
     summary.add_column(no_wrap=True)
@@ -696,13 +697,15 @@ class KeyReader:
                 return "enter"
             if ch == "\x1b":
                 return "escape"
+            if ch == "\x08":
+                return "backspace"
             return ch
 
         import select
 
         ch = sys.stdin.read(1)
         if ch != "\x1b":
-            return ch
+            return {"\n": "enter", "\r": "enter", "\x7f": "backspace", "\x08": "backspace"}.get(ch, ch)
 
         sequence = ""
         while select.select([sys.stdin], [], [], 0.01)[0]:
@@ -734,6 +737,11 @@ class TableBrowser:
         self.path = path
         self.names = table.column_names
         self.rows = self._rows_from_table(table)
+        self.original_rows = self.rows
+        self.row_ids = list(range(len(self.rows)))
+        self.filter_text = ""
+        self.filter_draft = ""
+        self.filter_editing = False
         self.metadata = metadata
         self.palette = palette
         self.max_width = max_width
@@ -760,8 +768,7 @@ class TableBrowser:
 
     def run(self) -> None:
         if not sys.stdin.isatty() or not sys.stdout.isatty():
-            print("ERROR: --browse requires an interactive terminal.", file=sys.stderr)
-            return
+            raise ValueError("--browse requires an interactive terminal.")
 
         sys.stdout.write("\033[?1049h\033[?25l")
         sys.stdout.flush()
@@ -770,7 +777,7 @@ class TableBrowser:
                 while True:
                     self._draw()
                     key = keys.read()
-                    if key in ("q", "Q", "escape"):
+                    if key in ("q", "Q", "escape") and not self.filter_editing:
                         break
                     self._handle_key(key)
         finally:
@@ -778,6 +785,24 @@ class TableBrowser:
             sys.stdout.flush()
 
     def _handle_key(self, key: str) -> None:
+        if self.filter_editing:
+            if key == "enter":
+                self.set_filter(self.filter_draft)
+                self.filter_editing = False
+            elif key == "escape":
+                self.filter_editing = False
+            elif key == "backspace":
+                self.filter_draft = self.filter_draft[:-1]
+            elif len(key) == 1 and key.isprintable() and len(self.filter_draft) < 200:
+                self.filter_draft += key
+            return
+        if key == "/":
+            self.filter_editing = True
+            self.filter_draft = self.filter_text
+            return
+        if key in ("c", "C"):
+            self.set_filter("")
+            return
         body_rows = self._body_rows()
         if key in ("up", "w", "W"):
             self.selected_row = max(0, self.selected_row - 1)
@@ -801,6 +826,15 @@ class TableBrowser:
 
         self._ensure_visible()
 
+    def set_filter(self, text: str) -> None:
+        self.filter_text = text.strip()
+        needle = self.filter_text.casefold()
+        self.row_ids = [index for index, row in enumerate(self.original_rows)
+                        if not needle or any(needle in value.casefold() for value in row)]
+        self.rows = [self.original_rows[index] for index in self.row_ids]
+        self.selected_row = self.row_offset = 0
+        self._ensure_visible()
+
     def _draw(self) -> None:
         width, height = shutil.get_terminal_size((120, 32))
         if width < 50 or height < 10:
@@ -817,7 +851,8 @@ class TableBrowser:
         body_rows = self._body_rows()
         visible_columns = self._visible_columns(width)
 
-        loaded_rows = len(self.rows)
+        visible_rows = len(self.rows)
+        loaded_rows = len(self.original_rows)
         total_rows = self.metadata.num_rows
         loaded_text = format_number(loaded_rows)
         total_text = format_number(total_rows)
@@ -825,14 +860,14 @@ class TableBrowser:
         if self.loaded_rows_limit > 0 and loaded_rows < total_rows:
             limit_note = f"  sample: first {loaded_text} rows"
 
-        title = self.palette.paint(f"{self.path.name}", "1;36")
+        title = self.palette.paint(f" PARQUET INFO  /  {stringify_value(self.path.name)} ", "1;38;2;142;227;197")
         stats = (
-            f"rows {loaded_text}/{total_text}  "
+            f"rows {format_number(visible_rows)}/{total_text}  "
             f"columns {len(self.names)}  "
             f"row groups {self.metadata.num_row_groups}"
             f"{limit_note}"
         )
-        stats = self.palette.paint(stats, "33")
+        stats = self.palette.paint(stats, "37")
 
         lines = ["\033[H", self._fit_line(title, width), self._fit_line(stats, width)]
         lines.append(self._render_header(visible_columns, width))
@@ -840,20 +875,25 @@ class TableBrowser:
 
         for display_row in range(body_rows):
             row_index = self.row_offset + display_row
-            if row_index >= loaded_rows:
+            if row_index >= visible_rows:
                 lines.append("")
                 continue
             lines.append(self._render_row(row_index, visible_columns, width))
 
         lines.append(self._fit_line(self._detail_line(), width))
-        help_text = "Arrows/WASD: move  PgUp/PgDn: rows  Home/End: columns  R: reset  Q/Esc: quit"
+        if self.filter_editing:
+            filter_line = f" / {self.filter_draft}_   [Enter apply | Esc cancel]"
+        else:
+            filter_line = f" / search loaded rows | C clear | R reset | filter: {self.filter_text or '(none)'}"
+        lines.append(self._fit_line(self.palette.paint(filter_line, "36"), width))
+        help_text = "Arrows/WASD move | PgUp/PgDn page | Home/End column | Q/Esc quit"
         lines.append(self._fit_line(self.palette.paint(help_text, "90"), width))
         lines.append("\033[J")
         sys.stdout.write("\n".join(lines))
         sys.stdout.flush()
 
     def _body_rows(self) -> int:
-        return max(1, shutil.get_terminal_size((120, 32)).lines - 7)
+        return max(1, shutil.get_terminal_size((120, 32)).lines - 8)
 
     def _row_label_width(self) -> int:
         return max(5, len(str(max(self.metadata.num_rows, len(self.rows), 1))))
@@ -899,9 +939,9 @@ class TableBrowser:
 
     def _render_header(self, visible_columns: list[int], terminal_width: int) -> str:
         row_label = "#".rjust(self._row_label_width())
-        cells = [self._cell(self.names[index], self._display_width(index)) for index in visible_columns]
+        cells = [self._cell(stringify_value(self.names[index]), self._display_width(index)) for index in visible_columns]
         line = f"{row_label} | " + " | ".join(cells)
-        return self._fit_line(self.palette.paint(line, "1;37;44"), terminal_width)
+        return self._fit_line(self.palette.paint(line, "1;38;2;142;227;197;48;2;32;42;57"), terminal_width)
 
     def _render_separator(self, visible_columns: list[int], terminal_width: int) -> str:
         row_label = "-" * self._row_label_width()
@@ -910,16 +950,16 @@ class TableBrowser:
         return self._fit_line(self.palette.paint(line, "36"), terminal_width)
 
     def _render_row(self, row_index: int, visible_columns: list[int], terminal_width: int) -> str:
-        row_number = str(row_index + 1).rjust(self._row_label_width())
+        row_number = str(self.row_ids[row_index] + 1).rjust(self._row_label_width())
         row_number_code = "1;30;47" if row_index == self.selected_row else "90"
         cells = [self.palette.paint(row_number, row_number_code)]
 
         for col_index in visible_columns:
             cell = self._cell(self.rows[row_index][col_index], self._display_width(col_index))
             if row_index == self.selected_row and col_index == self.selected_col:
-                cell = self.palette.paint(cell, "1;30;103")
+                cell = self.palette.paint(cell, "1;38;2;16;21;30;48;2;142;227;197")
             elif row_index == self.selected_row:
-                cell = self.palette.paint(cell, "30;47")
+                cell = self.palette.paint(cell, "38;2;231;237;245;48;2;32;42;57")
             elif col_index == self.selected_col:
                 cell = self.palette.paint(cell, "1;36")
             elif row_index % 2:
@@ -930,12 +970,12 @@ class TableBrowser:
 
     def _detail_line(self) -> str:
         if not self.rows or not self.names:
-            return self.palette.paint("No rows available.", "33")
+            return self.palette.paint("No rows match the filter." if self.filter_text else "No rows available.", "33")
 
-        name = self.names[self.selected_col]
+        name = stringify_value(self.names[self.selected_col])
         value = self.rows[self.selected_row][self.selected_col]
         position = (
-            f"row {self.selected_row + 1}/{len(self.rows)}  "
+            f"row {self.row_ids[self.selected_row] + 1}/{self.metadata.num_rows}  "
             f"column {self.selected_col + 1}/{len(self.names)}  "
         )
         return self.palette.paint(position, "1;36") + f"{name} = {value}"
@@ -1105,14 +1145,16 @@ def build_parser() -> argparse.ArgumentParser:
         default=1000,
         help="Maximum number of rows to load into browse mode. Use 0 for all rows",
     )
-    parser.add_argument("--no-color", action="store_true", help="Disable ANSI colors")
+    colors = parser.add_mutually_exclusive_group()
+    colors.add_argument("--color", dest="force_color", action="store_true", help="Force ANSI colors, overriding NO_COLOR")
+    colors.add_argument("--no-color", action="store_true", help="Disable ANSI colors")
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     return parser
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if args.rows < 0:
         parser.error("--rows must be >= 0")
@@ -1143,7 +1185,10 @@ def main() -> int:
     if args.browse and args.format == "json":
         parser.error("--format json cannot be used together with --browse")
 
-    args.color = enable_ansi(args.no_color)
+    args.color = enable_ansi(args.no_color, args.force_color)
+
+    if args.browse and (not sys.stdin.isatty() or not sys.stdout.isatty()):
+        parser.error("--browse requires an interactive terminal")
 
     paths = expand_paths(args.files)
     if not paths:

@@ -1,0 +1,45 @@
+name: Windows portable executable
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ['v*.*.*']
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+          cache: pip
+      - name: Prepare isolated environment
+        run: |
+          python -m venv .venv
+          .\.venv\Scripts\python.exe -m pip install -e ".[dev,windows]"
+      - name: Test behavior
+        run: .\.venv\Scripts\python.exe -m pytest -q
+      - name: Build portable executable
+        run: .\scripts\build_windows.ps1
+      - name: Smoke test packaged executable
+        run: |
+          $taskExe = Join-Path $PWD 'dist/windows/parquet.exe'
+          & $taskExe --version
+          if ($LASTEXITCODE -ne 0) { throw 'Packaged version command failed' }
+          $taskJson = & $taskExe examples/demo_inventory.parquet --format json --rows 2
+          if ($LASTEXITCODE -ne 0) { throw 'Packaged Arrow read failed' }
+          $taskReport = $taskJson | ConvertFrom-Json
+          if ($taskReport.rows -ne 120 -or $taskReport.rows_sample.Count -ne 2) { throw 'Incorrect packaged output' }
+          Compress-Archive -Path dist/windows/* -DestinationPath dist/parquet-info-windows-x64.zip
+      - uses: actions/upload-artifact@v6
+        with:
+          name: parquet-info-windows-x64
+          path: |
+            dist/parquet-info-windows-x64.zip
+            dist/windows/SHA256SUMS.txt

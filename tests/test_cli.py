@@ -129,3 +129,13 @@ def test_invalid_file_returns_error(case_dir: Path) -> None:
 
     assert result.returncode == 1
     assert "ERROR: unable to read" in result.stderr
+
+
+def test_colors_can_be_forced_and_disabled(case_dir: Path) -> None:
+    path = case_dir / "sample.parquet"
+    write_parquet(path)
+    colored = run_cli(str(path), "--schema-only", "--format", "plain", "--color")
+    plain = run_cli(str(path), "--schema-only", "--format", "plain", "--no-color")
+    assert colored.returncode == plain.returncode == 0
+    assert "\x1b[" in colored.stdout
+    assert "\x1b[" not in plain.stdout
