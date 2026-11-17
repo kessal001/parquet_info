@@ -5,12 +5,16 @@
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Parquet](https://img.shields.io/badge/Apache%20Parquet-inspector-50ABF1)
 ![Windows](https://img.shields.io/badge/Windows-portable%20EXE-8ee3c5)
+![Release](https://img.shields.io/github/v/release/kessal001/parquet_info)
+![Windows build](https://github.com/kessal001/parquet_info/actions/workflows/windows.yml/badge.svg)
 
 **A Parquet file. One command. Start exploring.**
 
 Run `parquet file.parquet` to navigate your data with the arrow keys, right inside CMD or your favorite terminal. Press `/` to filter the loaded rows without leaving the table.
 
 No account, server, or data upload. The portable Windows executable includes Python and Arrow.
+
+**[Download Windows EXE](https://github.com/kessal001/parquet_info/releases/latest/download/parquet.exe)** · **[Complete Windows ZIP](https://github.com/kessal001/parquet_info/releases/latest/download/parquet-info-windows-x64.zip)** · [Release notes and checksums](https://github.com/kessal001/parquet_info/releases/latest)
 
 ```powershell
 parquet examples\demo_inventory.parquet
@@ -40,7 +44,13 @@ The terminal uses mint headings, a dark column header, a highlighted selection a
 
 ### Windows: one executable, no Python installation
 
-Build the portable `parquet.exe`:
+1. Download and extract the [Windows ZIP](https://github.com/kessal001/parquet_info/releases/latest/download/parquet-info-windows-x64.zip) to a permanent folder, for example `C:\Tools\parquet`.
+2. In PowerShell, open that folder and run `.\install-command.ps1` once.
+3. Open a new CMD window and run `parquet`, or `parquet "C:\data\sales.parquet" --color`.
+
+The ZIP includes the executable, a synthetic demo dataset, PATH installer, Italian instructions, licenses and checksums. The executable also works on its own using its full path. Moving the folder requires installing the new PATH entry.
+
+To build the portable `parquet.exe` from source instead:
 
 ```powershell
 python -m venv .venv
@@ -121,11 +131,7 @@ parquet-info examples\demo_inventory.parquet
 
 ### PyPI releases
 
-The repo includes a Trusted Publishing release workflow. After the first PyPI release:
-
-```powershell
-python -m pip install parquet-info
-```
+PyPI publishing is a separate, manually requested maintainer workflow. Until the project and trusted publisher are configured and verified, use the Windows release or install directly from this GitHub repository.
 
 ## Quickstart
 
@@ -258,7 +264,7 @@ parquet-info huge_export.parquet --browse --browse-rows 5000 --columns customer,
 | `scripts/generate_readme_assets.py` | Regenerates the screenshot SVGs, including browse mode |
 | `tests/` | Automated CLI regression tests |
 | `.github/workflows/ci.yml` | Python test matrix for pull requests |
-| `.github/workflows/release.yml` | PyPI Trusted Publishing release workflow |
+| `.github/workflows/release.yml` | Explicit, opt-in PyPI Trusted Publishing workflow |
 | `.github/workflows/windows.yml` | Windows tests, executable build, smoke checks and ZIP artifact |
 
 ## Project health

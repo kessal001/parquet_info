@@ -10,10 +10,10 @@ Use this description:
 Browse Parquet right in CMD with one command. Portable Windows EXE, interactive terminal viewer, schema, profiles, search and JSON. No data uploads.
 ```
 
-Use this website after the first PyPI release:
+Use the GitHub release page as the website:
 
 ```text
-https://pypi.org/project/parquet-info/
+https://github.com/kessal001/parquet_info/releases/latest
 ```
 
 ## Topics

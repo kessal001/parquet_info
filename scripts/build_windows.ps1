@@ -15,6 +15,8 @@ try {
     Copy-Item -LiteralPath 'LICENSE' -Destination $taskOutput
     Copy-Item -LiteralPath 'docs/LEGGIMI-WINDOWS.txt' -Destination $taskOutput
     Copy-Item -LiteralPath 'scripts/install-command.ps1' -Destination $taskOutput
+    & $taskPython scripts/generate_license_notices.py --output (Join-Path $taskOutput 'THIRD-PARTY-NOTICES.txt')
+    if ($LASTEXITCODE -ne 0) { throw 'Third-party license generation failed' }
     $taskHash = Get-FileHash -LiteralPath (Join-Path $taskOutput 'parquet.exe') -Algorithm SHA256
     [IO.File]::WriteAllText((Join-Path $taskOutput 'SHA256SUMS.txt'), ($taskHash.Hash.ToLowerInvariant() + '  parquet.exe' + [Environment]::NewLine))
     Write-Output "Built $taskOutput\parquet.exe"
