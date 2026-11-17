@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import html
+import contextlib
+import io
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 import parquet_info as cli
@@ -43,7 +46,7 @@ COMMANDS: dict[str, list[str]] = {
 
 def run_command(command: list[str]) -> str:
     completed = subprocess.run(
-        command,
+        [sys.executable, *command[1:]],
         cwd=ROOT,
         check=True,
         text=True,
@@ -78,17 +81,16 @@ def render_svg(title: str, content: str, destination: Path) -> None:
         "  </defs>",
         f'  <rect width="{width}" height="{height}" rx="22" fill="url(#bg)"/>',
         f'  <rect x="0" y="0" width="{width}" height="{title_bar}" rx="22" fill="#1f2937"/>',
-        '  <circle cx="26" cy="28" r="7" fill="#fb7185"/>',
-        '  <circle cx="50" cy="28" r="7" fill="#fbbf24"/>',
-        '  <circle cx="74" cy="28" r="7" fill="#34d399"/>',
-        f'  <text x="100" y="34" font-family="Segoe UI, Arial, sans-serif" font-size="20" fill="#e5e7eb">{html.escape(title)}</text>',
+        '  <text x="26" y="34" font-family="Consolas, monospace" font-size="20" fill="#8ee3c5">&gt;_</text>',
+        f'  <text x="70" y="34" font-family="Segoe UI, Arial, sans-serif" font-size="20" fill="#e5e7eb">{html.escape(title)}</text>',
         f'  <g filter="url(#shadow)"><rect x="18" y="18" width="{width - 36}" height="{height - 36}" rx="18" fill="none" stroke="#334155"/></g>',
         f'  <text x="{padding}" y="{text_y}" font-family="Cascadia Mono, Consolas, monospace" font-size="18" fill="#d1d5db" xml:space="preserve">',
     ]
 
     for index, line in enumerate(lines):
         escaped = html.escape(line) or " "
-        svg_lines.append(f'    <tspan x="{padding}" dy="{line_height if index else 0}">{escaped}</tspan>')
+        color = ' fill="#8ee3c5"' if line.lstrip().startswith(("PARQUET INFO", "# |")) else ""
+        svg_lines.append(f'    <tspan x="{padding}" dy="{line_height if index else 0}"{color}>{escaped}</tspan>')
 
     svg_lines.extend(["  </text>", "</svg>"])
     destination.write_text("\n".join(svg_lines) + "\n", encoding="utf-8")
@@ -116,37 +118,10 @@ def browser_snapshot() -> str:
     original_get_terminal_size = cli.shutil.get_terminal_size
     cli.shutil.get_terminal_size = lambda fallback=(120, 32): terminal_size
     try:
-        browser._ensure_visible()
-        visible_columns = browser._visible_columns(terminal_size.columns)
-        body_rows = browser._body_rows()
-        loaded_rows = len(browser.rows)
-        total_rows = browser.metadata.num_rows
-        loaded_text = cli.format_number(loaded_rows)
-        total_text = cli.format_number(total_rows)
-        limit_note = ""
-        if browser.loaded_rows_limit > 0 and loaded_rows < total_rows:
-            limit_note = f"  sample: first {loaded_text} rows"
-
-        lines = [
-            browser.path.name,
-            (
-                f"rows {loaded_text}/{total_text}  "
-                f"columns {len(browser.names)}  "
-                f"row groups {browser.metadata.num_row_groups}"
-                f"{limit_note}"
-            ),
-            browser._render_header(visible_columns, terminal_size.columns),
-            browser._render_separator(visible_columns, terminal_size.columns),
-        ]
-
-        for display_row in range(body_rows):
-            row_index = browser.row_offset + display_row
-            if row_index >= loaded_rows:
-                break
-            lines.append(browser._render_row(row_index, visible_columns, terminal_size.columns))
-
-        lines.append(browser._detail_line())
-        lines.append("Arrows/WASD: move  PgUp/PgDn: rows  Home/End: columns  R: reset  Q/Esc: quit")
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            browser._draw()
+        lines = output.getvalue().strip().splitlines()
     finally:
         cli.shutil.get_terminal_size = original_get_terminal_size
 

@@ -4,16 +4,20 @@
 ![CI](https://github.com/kessal001/parquet_info/actions/workflows/ci.yml/badge.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Parquet](https://img.shields.io/badge/Apache%20Parquet-inspector-50ABF1)
-![CLI](https://img.shields.io/badge/terminal-first-222222)
+![Windows](https://img.shields.io/badge/Windows-portable%20EXE-8ee3c5)
+![Release](https://img.shields.io/github/v/release/kessal001/parquet_info)
+![Windows build](https://github.com/kessal001/parquet_info/actions/workflows/windows.yml/badge.svg)
 
-Inspect Parquet files from the terminal in seconds.
+**A Parquet file. One command. Start exploring.**
 
-`parquet_info` helps you answer the first questions you always have when a `.parquet` file lands on your machine: what is inside, how big it is, which columns matter, whether a value exists, and whether the data quality looks suspicious.
+Run `parquet file.parquet` to navigate your data with the arrow keys, right inside CMD or your favorite terminal. Press `/` to filter the loaded rows without leaving the table.
 
-It is built for fast inspection without opening Power BI, pandas, Spark, or a notebook:
+No account, server, or data upload. The portable Windows executable includes Python and Arrow.
+
+**[Download Windows EXE](https://github.com/kessal001/parquet_info/releases/latest/download/parquet.exe)** · **[Complete Windows ZIP](https://github.com/kessal001/parquet_info/releases/latest/download/parquet-info-windows-x64.zip)** · [Release notes and checksums](https://github.com/kessal001/parquet_info/releases/latest)
 
 ```powershell
-parquet-info examples\demo_inventory.parquet --profile --search priority --format plain
+parquet examples\demo_inventory.parquet
 ```
 
 ## Why it is useful
@@ -23,9 +27,55 @@ parquet-info examples\demo_inventory.parquet --profile --search priority --forma
 - profile columns for nulls, distinct counts, ranges, averages, and top values;
 - search text across selected columns;
 - export JSON for automation;
-- browse rows interactively in the terminal.
+- browse rows interactively in the terminal with one short command;
+- filter the loaded sample with `/`, preserving the original row numbers;
+- select a file directly in the terminal when launched without arguments.
+
+## Try it
+
+```powershell
+python -m pip install "git+https://github.com/kessal001/parquet_info.git"
+parquet "C:\data\your file.parquet"
+```
+
+Run `parquet` without arguments to choose a file. Use the arrow keys or WASD, PgUp/PgDn, Home/End, and **Q** to quit. `parquet-info` keeps the original report-oriented interface for scripts and automation.
+
+The terminal uses mint headings, a dark column header, a highlighted selection and dim alternate rows. Colors are enabled automatically in an interactive terminal. Use `--color` to force them or `--no-color` for plain text; `NO_COLOR` is respected unless explicitly overridden.
+
+### Windows: one executable, no Python installation
+
+1. Download and extract the [Windows ZIP](https://github.com/kessal001/parquet_info/releases/latest/download/parquet-info-windows-x64.zip) to a permanent folder, for example `C:\Tools\parquet`.
+2. In PowerShell, open that folder and run `.\install-command.ps1` once.
+3. Open a new CMD window and run `parquet`, or `parquet "C:\data\sales.parquet" --color`.
+
+The ZIP includes the executable, a synthetic demo dataset, PATH installer, Italian instructions, licenses and checksums. The executable also works on its own using its full path. Moving the folder requires installing the new PATH entry.
+
+To build the portable `parquet.exe` from source instead:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -e ".[dev,windows]"
+.\scripts\build_windows.ps1
+```
+
+The output is `dist/windows/`. To use `parquet` from any CMD folder, run the included `install-command.ps1` once, then open a new CMD window. It adds only the executable's directory to your **user PATH**, without administrator privileges. Use `-Remove` to undo this.
+
+```bat
+parquet "C:\data\sales.parquet"
+parquet
+parquet "C:\data\sales.parquet" --schema-only
+parquet "C:\data\sales.parquet" --format json
+```
+
+The Windows workflow also produces a ZIP and SHA-256 checksum as [build artifacts](https://github.com/kessal001/parquet_info/actions/workflows/windows.yml). A successful workflow run is required before artifacts are available. Local and CI builds are unsigned. See [Windows instructions](docs/LEGGIMI-WINDOWS.txt).
+
+The file selection prompt, data table, filtering and navigation all stay in the terminal. No graphical toolkit is required.
 
 ## Screenshots
+
+### Interactive browser
+
+<img src="assets/screenshots/browse.svg" alt="Terminal browser showing the synthetic inventory data, row counts, selected cell and keyboard shortcuts" width="1000">
 
 ### Schema overview
 
@@ -38,10 +88,6 @@ parquet-info examples\demo_inventory.parquet --profile --search priority --forma
 ### Search results
 
 <img src="assets/screenshots/search.svg" alt="Search results screenshot" width="900">
-
-### Interactive browser
-
-<img src="assets/screenshots/browse.svg" alt="Interactive browser screenshot" width="900">
 
 ## Install
 
@@ -85,11 +131,7 @@ parquet-info examples\demo_inventory.parquet
 
 ### PyPI releases
 
-The repo includes a Trusted Publishing release workflow. After the first PyPI release:
-
-```powershell
-python -m pip install parquet-info
-```
+PyPI publishing is a separate, manually requested maintainer workflow. Until the project and trusted publisher are configured and verified, use the Windows release or install directly from this GitHub repository.
 
 ## Quickstart
 
@@ -174,9 +216,14 @@ Schema:
 | `--browse` | Open the interactive terminal browser |
 | `--browse-rows` | Maximum number of rows loaded into browse mode |
 | `--no-color` | Disable ANSI colors |
+| `--color` | Force ANSI colors, including when NO_COLOR is set |
 | `--version` | Print the installed CLI version |
 
 ## Performance notes
+
+The interactive browser loads the first **1,000 rows** by default. `/` filters only those loaded rows, across the selected columns; **C** clears the filter. The table retains the original row numbers and shows the sample size. Change the limit with `--browse-rows`; `0` loads the whole file and may use substantial memory. Large individual values and wide schemas also affect memory use.
+
+The separate `--search` report can scan the entire file, or a bounded prefix with `--search-rows`. JSON exports keep the original report semantics; an interactive filter does not modify your file.
 
 For large files, start cheap:
 
@@ -207,6 +254,9 @@ parquet-info huge_export.parquet --browse --browse-rows 5000 --columns customer,
 | Path | Purpose |
 | --- | --- |
 | `parquet_info.py` | Main CLI implementation |
+| `parquet_windows.py` | `parquet` command and portable executable entry point |
+| `scripts/build_windows.ps1` | Reproducible Windows build command |
+| `scripts/install-command.ps1` | Install/remove the user PATH entry |
 | `parquet_info.cmd` | Windows launcher |
 | `examples/demo_inventory.parquet` | Synthetic demo dataset |
 | `assets/screenshots/*.svg` | README screenshots generated from CLI output |
@@ -214,7 +264,8 @@ parquet-info huge_export.parquet --browse --browse-rows 5000 --columns customer,
 | `scripts/generate_readme_assets.py` | Regenerates the screenshot SVGs, including browse mode |
 | `tests/` | Automated CLI regression tests |
 | `.github/workflows/ci.yml` | Python test matrix for pull requests |
-| `.github/workflows/release.yml` | PyPI Trusted Publishing release workflow |
+| `.github/workflows/release.yml` | Explicit, opt-in PyPI Trusted Publishing workflow |
+| `.github/workflows/windows.yml` | Windows tests, executable build, smoke checks and ZIP artifact |
 
 ## Project health
 

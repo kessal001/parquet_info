@@ -10,10 +10,8 @@
   </defs>
   <rect width="1044" height="1144" rx="22" fill="url(#bg)"/>
   <rect x="0" y="0" width="1044" height="56" rx="22" fill="#1f2937"/>
-  <circle cx="26" cy="28" r="7" fill="#fb7185"/>
-  <circle cx="50" cy="28" r="7" fill="#fbbf24"/>
-  <circle cx="74" cy="28" r="7" fill="#34d399"/>
-  <text x="100" y="34" font-family="Segoe UI, Arial, sans-serif" font-size="20" fill="#e5e7eb">parquet-info profile</text>
+  <text x="26" y="34" font-family="Consolas, monospace" font-size="20" fill="#8ee3c5">&gt;_</text>
+  <text x="70" y="34" font-family="Segoe UI, Arial, sans-serif" font-size="20" fill="#e5e7eb">parquet-info profile</text>
   <g filter="url(#shadow)"><rect x="18" y="18" width="1008" height="1108" rx="18" fill="none" stroke="#334155"/></g>
   <text x="28" y="84" font-family="Cascadia Mono, Consolas, monospace" font-size="18" fill="#d1d5db" xml:space="preserve">
     <tspan x="28" dy="0">=== examples\demo_inventory.parquet ===</tspan>
@@ -41,7 +39,7 @@
     <tspan x="28" dy="24">  16. notes: string (nullable)</tspan>
     <tspan x="28" dy="24"> </tspan>
     <tspan x="28" dy="24">Column profile:</tspan>
-    <tspan x="28" dy="24"># | Column       | Type   | Nulls       | Distinct | Range / avg                     | Top values                              </tspan>
+    <tspan x="28" dy="24" fill="#8ee3c5"># | Column       | Type   | Nulls       | Distinct | Range / avg                     | Top values                              </tspan>
     <tspan x="28" dy="24">--+--------------+--------+-------------+----------+---------------------------------+-----------------------------------------</tspan>
     <tspan x="28" dy="24">1 | sku          | string | 0 (0%)      | 6        | A100 -&gt; E510                    | A100 (20); A120 (20); B200 (20)         </tspan>
     <tspan x="28" dy="24">2 | product_name | string | 0 (0%)      | 6        | Ceramic Cups -&gt; Matcha Tin      | Ceramic Cups (20); Cold Brew Kit (20)...</tspan>

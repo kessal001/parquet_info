@@ -1,0 +1,38 @@
+PARQUET-INFO 0.2.0 — WINDOWS PORTATILE
+
+Nessuna installazione di Python necessaria. Windows x64.
+
+Per usare il comando da CMD, esegui una sola volta in PowerShell:
+  powershell -NoProfile -File .\install-command.ps1
+Poi apri una NUOVA finestra CMD:
+
+  parquet                         Scegli il file da CMD e apri il lettore
+  parquet "C:\dati\file.parquet"   Apri direttamente il lettore interattivo
+  parquet file.parquet --schema-only
+  parquet file.parquet --format json
+  parquet --version
+
+TERMINALE: frecce/WASD per muoversi; PgUp/PgDn per le righe;
+Home/End per le colonne; R ripristina la posizione; Q/Esc esce.
+Premi /, scrivi il testo e Invio per filtrare le righe caricate.
+Durante la ricerca, Backspace corregge ed Esc annulla. C rimuove il filtro.
+I numeri delle righe rimangono quelli del file originale.
+Caricamento iniziale: prime 1.000 righe. --browse-rows cambia il limite.
+Il filtro / cerca solo nel campione caricato e nelle colonne selezionate.
+Per esempio, per caricare le prime 5.000 righe:
+  parquet file.parquet --browse-rows 5000
+Per una ricerca separata nell'intero file:
+  parquet file.parquet --search testo --format json
+Tutta la visualizzazione e la scelta del file rimangono in CMD.
+COLORI: automatici in CMD, con intestazioni verde menta e cella evidenziata.
+  parquet file.parquet --color      Forza i colori
+  parquet file.parquet --no-color   Disattiva i colori
+
+Nessun dato viene caricato online. I dati originali vengono aperti in lettura.
+Il primo avvio estrae temporaneamente le librerie incluse nell'eseguibile.
+Il binario locale non è firmato digitalmente.
+
+Per rimuovere la cartella dal PATH senza eliminare dati:
+  powershell -NoProfile -File .\install-command.ps1 -Remove
+
+Progetto e licenza MIT: https://github.com/kessal001/parquet_info

@@ -33,7 +33,7 @@ jobs:
           python -m pip install -e ".[dev]"
 
       - name: Compile sources
-        run: python -m py_compile parquet_info.py scripts/generate_demo_parquet.py scripts/generate_readme_assets.py
+        run: python -m py_compile parquet_info.py parquet_windows.py scripts/generate_demo_parquet.py scripts/generate_readme_assets.py
 
       - name: Run tests
         run: pytest

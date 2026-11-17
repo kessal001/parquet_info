@@ -12,5 +12,7 @@ dist/
 .coverage
 htmlcov/
 *.log
+*.spec
+parquet/
 BaseDWH.parquet
 

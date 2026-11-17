@@ -1,6 +1,20 @@
 # Release Process
 
-This project is ready for PyPI Trusted Publishing through GitHub Actions.
+Windows releases are published on GitHub. PyPI publication is a separate opt-in operation.
+
+## GitHub Windows release
+
+1. Run the CLI tests and build the portable executable with `scripts/build_windows.ps1`.
+2. Confirm the Python version matrix and Windows build pass on the release commit.
+3. Test the actual executable: `parquet --version`, interactive navigation, colored text, filtering, and JSON output.
+4. Package the executable, demo, PATH installer, instructions, project license, third-party notices and SHA-256 checksum into `parquet-info-windows-x64.zip`.
+5. Create a tag for the version, for example `v0.2.0`, at the tested commit and push it.
+6. Create a GitHub release for that tag. Attach `parquet.exe`, the ZIP, `SHA256SUMS.txt` and `THIRD-PARTY-NOTICES.txt`.
+7. Download the published assets and verify their checksums. Confirm the README's direct download links work without signing in.
+
+State that the executable is Windows x64 and unsigned, includes its runtime, loads 1,000 rows by default, and filters only the loaded rows.
+
+Pushing a version tag runs the Windows build but does not publish to PyPI.
 
 ## One-time PyPI setup
 
@@ -25,11 +39,10 @@ python -m build
 ```
 
 5. Commit the release changes.
-6. Create and push a tag:
+6. After ownership and the trusted publisher are verified, run the **Publish to PyPI (manual)** workflow against the version tag, explicitly enabling `publish_pypi`:
 
 ```powershell
-git tag v0.1.0
-git push origin v0.1.0
+gh workflow run release.yml --ref v0.2.0 -f publish_pypi=true
 ```
 
-The `Release` workflow builds the package and publishes it to PyPI.
+The manual workflow builds the Python package and publishes it to the separately configured PyPI project.
