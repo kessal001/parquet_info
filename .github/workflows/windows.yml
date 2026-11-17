@@ -37,7 +37,7 @@ jobs:
           $taskReport = $taskJson | ConvertFrom-Json
           if ($taskReport.rows -ne 120 -or $taskReport.rows_sample.Count -ne 2) { throw 'Incorrect packaged output' }
           Compress-Archive -Path dist/windows/* -DestinationPath dist/parquet-info-windows-x64.zip
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: parquet-info-windows-x64
           path: |
